@@ -13,6 +13,17 @@ export default class View {
         this.model = model
     }
 
+    setModel(model){
+      this.model = model
+    }
+
+    render(){
+      const todos = this.model.getTodos()
+      for (const todo of todos){
+        this.createRow(todo)
+      }
+    }
+
     addTodo(title, description) {
       const todo =  this.model.addTodo(title, description)
       this.createRow(todo)
