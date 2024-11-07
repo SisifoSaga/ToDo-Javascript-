@@ -6,10 +6,10 @@ export default class View {
   constructor() {
     this.model = null;
     this.table = document.getElementById('table');
+    this.archivedTable = document.getElementById('archivedTable');
     this.addTodoForm = new AddTodo();
     this.modal = new Modal();
     this.filters = new Filters();
-    
 
     this.addTodoForm.onClick((title, description) => this.addTodo(title, description));
     this.modal.onClick((id, values) => this.editTodo(id, values));
@@ -23,6 +23,9 @@ export default class View {
   render() {
     const todos = this.model.getTodos();
     todos.forEach((todo) => this.createRow(todo));
+
+    const archivedTodos = this.model.archivedTodos;
+    archivedTodos.forEach((todo) => this.createArchivedRow(todo));
   }
 
   filter(filters) {
@@ -57,7 +60,13 @@ export default class View {
   }
 
   toggleCompleted(id) {
-    this.model.toggleCompleted(id);
+    const confirmArchive = confirm("¿Deseas archivar esta tarea?");
+    if (confirmArchive) {
+      this.model.archiveTodo(id);
+      document.getElementById(id).remove();
+      const archivedTodo = this.model.archivedTodos.find(todo => todo.id === id);
+      this.createArchivedRow(archivedTodo);
+    }
   }
 
   editTodo(id, values) {
@@ -73,24 +82,40 @@ export default class View {
     document.getElementById(id).remove();
   }
 
+  archiveTodo(id) {
+    const confirmArchive = confirm("¿Deseas archivar esta tarea?");
+    if (confirmArchive) {
+      this.model.archiveTodo(id);
+      document.getElementById(id).remove();
+      const archivedTodo = this.model.archivedTodos.find(todo => todo.id === id);
+      this.createArchivedRow(archivedTodo);
+    }
+  }
+
+  restoreTodo(id) {
+    const confirmRestore = confirm("¿Deseas restaurar esta tarea?");
+    if (confirmRestore) {
+      this.model.restoreTodo(id);
+      document.getElementById(`archived-${id}`).remove();
+      const restoredTodo = this.model.getTodos().find(todo => todo.id === id);
+      this.createRow(restoredTodo);
+    }
+  }
+
   createRow(todo) {
-    const row = table.insertRow();
+    const row = this.table.insertRow();
     row.setAttribute('id', todo.id);
     row.innerHTML = `
       <td>${todo.title}</td>
       <td>${todo.description}</td>
-      <td class="text-center">
-
-      </td>
-      <td class="text-right">
-
-      </td>
+      <td class="text-center"></td>
+      <td class="text-right"></td>
     `;
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = todo.completed;
-    checkbox.onclick = () => this.toggleCompleted(todo.id);
+    checkbox.onclick = () => this.archiveTodo(todo.id);
     row.children[2].appendChild(checkbox);
 
     const editBtn = document.createElement('button');
@@ -111,5 +136,21 @@ export default class View {
     removeBtn.innerHTML = '<i class="fa fa-trash"></i>';
     removeBtn.onclick = () => this.removeTodo(todo.id);
     row.children[3].appendChild(removeBtn);
+  }
+
+  createArchivedRow(todo) {
+    const row = this.archivedTable.insertRow();
+    row.setAttribute('id', `archived-${todo.id}`);
+    row.innerHTML = `
+      <td>${todo.title}</td>
+      <td>${todo.description}</td>
+      <td class="text-right"></td>
+    `;
+
+    const restoreBtn = document.createElement('button');
+    restoreBtn.classList.add('btn', 'btn-secondary');
+    restoreBtn.innerText = 'Restaurar';
+    restoreBtn.onclick = () => this.restoreTodo(todo.id); // Llamada a restoreTodo con función flecha
+    row.children[2].appendChild(restoreBtn);
   }
 }

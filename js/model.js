@@ -2,6 +2,8 @@ export default class Model {
     constructor() {
       this.view = null;
       this.todos = JSON.parse(localStorage.getItem('todos'));
+      this.archivedTodos = JSON.parse(localStorage.getItem('archivedTodos')) || [];
+
       if (!this.todos || this.todos.length < 1) {
         this.todos = [
           {
@@ -24,6 +26,10 @@ export default class Model {
     save() {
       localStorage.setItem('todos', JSON.stringify(this.todos));
     }
+
+    saveArchived() {
+        localStorage.setItem('archivedTodos', JSON.stringify(this.archivedTodos));
+      }
   
     getTodos() {
       return this.todos.map((todo) => ({...todo}));
@@ -66,4 +72,20 @@ export default class Model {
       this.todos.splice(index, 1);  
       this.save();
     }
+
+    archiveTodo(id) {
+        const index = this.findTodo(id);
+        const [todo] = this.todos.splice(index, 1);
+        this.archivedTodos.push(todo);
+        this.save();
+        this.saveArchived();
+      }
+
+      restoreTodo(id) {
+        const index = this.archivedTodos.findIndex(todo => todo.id === id);
+        const [todo] = this.archivedTodos.splice(index, 1);
+        this.todos.push(todo);
+        this.save();
+        this.saveArchived();
+      }
   }
